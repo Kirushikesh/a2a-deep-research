@@ -1,0 +1,60 @@
+[project]
+name = "a2a-deep-research"
+version = "0.1.0"
+description = "A deep research agent implementation using Google's Agent-to-Agent (A2A) framework with Multi-Component Protocol (MCP) tools"
+authors = [
+    {name = "Kirushikesh", email = "kirushikesh@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain (>=0.3.24,<0.4.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "click (>=8.1.8,<9.0.0)",
+    "asyncclick (>=8.1.8,<9.0.0)",
+    "a2a-samples @ git+https://github.com/google/A2A#subdirectory=samples/python",
+    "langgraph (>=0.4.1,<0.5.0)",
+    "langchain-mcp-adapters (>=0.0.9,<0.0.10)",
+    "crewai-tools[mcp] (>=0.43.0,<0.44.0)",
+    "google-genai (>=1.13.0,<2.0.0)",
+    "google-adk (>=0.4.0,<0.5.0)",
+    "mesop (>=1.0.1,<2.0.0)",
+    "langchain-google-genai (>=2.1.4,<3.0.0)",
+    "jupyter (>=1.1.1,<2.0.0)",
+    "langchain-tavily (>=0.1.6,<0.2.0)",
+]
+
+[tool.poetry]
+packages = [{include = "a2a_mcp", from = "src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+flake8 = "^7.2.0"
+isort = "^6.0.1"
+mypy = "^1.15.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
