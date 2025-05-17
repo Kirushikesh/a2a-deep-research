@@ -216,15 +216,11 @@ The project can be used to:
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+Contributions to improve this project are welcome. Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the terms of the LICENSE file.
+This project is licensed under the MIT License file for details.
 
 ## Acknowledgments
 
@@ -237,5 +233,12 @@ This project is licensed under the terms of the LICENSE file.
 
 - [Google A2A Framework Documentation](https://github.com/google/A2A)
 - [LangGraph Documentation](https://langchain-ai.github.io/docs/langgraph/)
-- [MCP Protocol Specification](https://github.com/google/A2A/tree/main/docs)
-- [OpenAI Deep Research Documentation](https://openai.com/deep-research/)
+- [MCP Protocol Specification](https://modelcontextprotocol.io/introduction)
+
+## Contact
+
+For any queries or suggestions, please open an issue in the GitHub repository.
+
+---
+
+<p align="center"><sub>Made with ❤️ using <a href="https://windsurf.com">Windsurf</a>.</sub></p>
