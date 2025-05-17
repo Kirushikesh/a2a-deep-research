@@ -1,7 +1,6 @@
 # A2A MCP Demonstration
 
 A comprehensive implementation of Google's Agent-to-Agent (A2A) framework using Model Context Protocol (MCP) tools. This project showcases the interoperability between different AI agents and demonstrates practical applications of modern AI agent architectures.
-
 ## Technical Background
 
 ### Google A2A Framework
@@ -213,6 +212,8 @@ The project can be used to:
 5. Understand A2A framework concepts
 6. Learn MCP protocol implementation
 7. Build AI-powered research tools
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Kirushikesh/a2a-deep-research)
 
 ## Contributing
 
