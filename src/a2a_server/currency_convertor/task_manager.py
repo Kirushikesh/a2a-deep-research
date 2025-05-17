@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import traceback
-
 from collections.abc import AsyncIterable
 
 from agent import CurrencyAgent
@@ -29,7 +28,6 @@ from common.types import (
 )
 from common.utils.push_notification_auth import PushNotificationSenderAuth
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -48,22 +46,20 @@ class AgentTaskManager(InMemoryTaskManager):
         query = self._get_user_query(task_send_params)
 
         try:
-            async for item in self.agent.stream(
-                query, task_send_params.sessionId
-            ):
-                is_task_complete = item['is_task_complete']
-                require_user_input = item['require_user_input']
+            async for item in self.agent.stream(query, task_send_params.sessionId):
+                is_task_complete = item["is_task_complete"]
+                require_user_input = item["require_user_input"]
                 artifact = None
                 message = None
-                parts = [{'type': 'text', 'text': item['content']}]
+                parts = [{"type": "text", "text": item["content"]}]
                 end_stream = False
 
                 if not is_task_complete and not require_user_input:
                     task_state = TaskState.WORKING
-                    message = Message(role='agent', parts=parts)
+                    message = Message(role="agent", parts=parts)
                 elif require_user_input:
                     task_state = TaskState.INPUT_REQUIRED
-                    message = Message(role='agent', parts=parts)
+                    message = Message(role="agent", parts=parts)
                     end_stream = True
                 else:
                     task_state = TaskState.COMPLETED
@@ -94,11 +90,11 @@ class AgentTaskManager(InMemoryTaskManager):
                 )
 
         except Exception as e:
-            logger.error(f'An error occurred while streaming the response: {e}')
+            logger.error(f"An error occurred while streaming the response: {e}")
             await self.enqueue_events_for_sse(
                 task_send_params.id,
                 InternalError(
-                    message=f'An error occurred while streaming the response: {e}'
+                    message=f"An error occurred while streaming the response: {e}"
                 ),
             )
 
@@ -111,7 +107,7 @@ class AgentTaskManager(InMemoryTaskManager):
             CurrencyAgent.SUPPORTED_CONTENT_TYPES,
         ):
             logger.warning(
-                'Unsupported output mode. Received %s, Support %s',
+                "Unsupported output mode. Received %s, Support %s",
                 task_send_params.acceptedOutputModes,
                 CurrencyAgent.SUPPORTED_CONTENT_TYPES,
             )
@@ -121,12 +117,10 @@ class AgentTaskManager(InMemoryTaskManager):
             task_send_params.pushNotification
             and not task_send_params.pushNotification.url
         ):
-            logger.warning('Push notification URL is missing')
+            logger.warning("Push notification URL is missing")
             return JSONRPCResponse(
                 id=request.id,
-                error=InvalidParamsError(
-                    message='Push notification URL is missing'
-                ),
+                error=InvalidParamsError(message="Push notification URL is missing"),
             )
 
         return None
@@ -144,7 +138,7 @@ class AgentTaskManager(InMemoryTaskManager):
                 return SendTaskResponse(
                     id=request.id,
                     error=InvalidParamsError(
-                        message='Push notification URL is invalid'
+                        message="Push notification URL is invalid"
                     ),
                 )
 
@@ -157,12 +151,10 @@ class AgentTaskManager(InMemoryTaskManager):
         task_send_params: TaskSendParams = request.params
         query = self._get_user_query(task_send_params)
         try:
-            agent_response = self.agent.invoke(
-                query, task_send_params.sessionId
-            )
+            agent_response = self.agent.invoke(query, task_send_params.sessionId)
         except Exception as e:
-            logger.error(f'Error invoking agent: {e}')
-            raise ValueError(f'Error invoking agent: {e}')
+            logger.error(f"Error invoking agent: {e}")
+            raise ValueError(f"Error invoking agent: {e}")
         return await self._process_agent_response(request, agent_response)
 
     async def on_send_task_subscribe(
@@ -182,14 +174,12 @@ class AgentTaskManager(InMemoryTaskManager):
                     return JSONRPCResponse(
                         id=request.id,
                         error=InvalidParamsError(
-                            message='Push notification URL is invalid'
+                            message="Push notification URL is invalid"
                         ),
                     )
 
             task_send_params: TaskSendParams = request.params
-            sse_event_queue = await self.setup_sse_consumer(
-                task_send_params.id, False
-            )
+            sse_event_queue = await self.setup_sse_consumer(task_send_params.id, False)
 
             asyncio.create_task(self._run_streaming_agent(request))
 
@@ -197,12 +187,12 @@ class AgentTaskManager(InMemoryTaskManager):
                 request.id, task_send_params.id, sse_event_queue
             )
         except Exception as e:
-            logger.error(f'Error in SSE stream: {e}')
+            logger.error(f"Error in SSE stream: {e}")
             print(traceback.format_exc())
             return JSONRPCResponse(
                 id=request.id,
                 error=InternalError(
-                    message='An error occurred while streaming the response'
+                    message="An error occurred while streaming the response"
                 ),
             )
 
@@ -215,12 +205,12 @@ class AgentTaskManager(InMemoryTaskManager):
         history_length = task_send_params.historyLength
         task_status = None
 
-        parts = [{'type': 'text', 'text': agent_response['content']}]
+        parts = [{"type": "text", "text": agent_response["content"]}]
         artifact = None
-        if agent_response['require_user_input']:
+        if agent_response["require_user_input"]:
             task_status = TaskStatus(
                 state=TaskState.INPUT_REQUIRED,
-                message=Message(role='agent', parts=parts),
+                message=Message(role="agent", parts=parts),
             )
         else:
             task_status = TaskStatus(state=TaskState.COMPLETED)
@@ -235,16 +225,16 @@ class AgentTaskManager(InMemoryTaskManager):
     def _get_user_query(self, task_send_params: TaskSendParams) -> str:
         part = task_send_params.message.parts[0]
         if not isinstance(part, TextPart):
-            raise ValueError('Only text parts are supported')
+            raise ValueError("Only text parts are supported")
         return part.text
 
     async def send_task_notification(self, task: Task):
         if not await self.has_push_notification_info(task.id):
-            logger.info(f'No push notification info found for task {task.id}')
+            logger.info(f"No push notification info found for task {task.id}")
             return
         push_info = await self.get_push_notification_info(task.id)
 
-        logger.info(f'Notifying for task {task.id} => {task.status.state}')
+        logger.info(f"Notifying for task {task.id} => {task.status.state}")
         await self.notification_sender_auth.send_push_notification(
             push_info.url, data=task.model_dump(exclude_none=True)
         )
@@ -254,18 +244,16 @@ class AgentTaskManager(InMemoryTaskManager):
     ) -> AsyncIterable[SendTaskStreamingResponse] | JSONRPCResponse:
         task_id_params: TaskIdParams = request.params
         try:
-            sse_event_queue = await self.setup_sse_consumer(
-                task_id_params.id, True
-            )
+            sse_event_queue = await self.setup_sse_consumer(task_id_params.id, True)
             return self.dequeue_events_for_sse(
                 request.id, task_id_params.id, sse_event_queue
             )
         except Exception as e:
-            logger.error(f'Error while reconnecting to SSE stream: {e}')
+            logger.error(f"Error while reconnecting to SSE stream: {e}")
             return JSONRPCResponse(
                 id=request.id,
                 error=InternalError(
-                    message=f'An error occurred while reconnecting to stream: {e}'
+                    message=f"An error occurred while reconnecting to stream: {e}"
                 ),
             )
 
@@ -273,15 +261,11 @@ class AgentTaskManager(InMemoryTaskManager):
         self, task_id: str, push_notification_config: PushNotificationConfig
     ):
         # Verify the ownership of notification URL by issuing a challenge request.
-        is_verified = (
-            await self.notification_sender_auth.verify_push_notification_url(
-                push_notification_config.url
-            )
+        is_verified = await self.notification_sender_auth.verify_push_notification_url(
+            push_notification_config.url
         )
         if not is_verified:
             return False
 
-        await super().set_push_notification_info(
-            task_id, push_notification_config
-        )
+        await super().set_push_notification_info(task_id, push_notification_config)
         return True

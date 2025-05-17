@@ -395,7 +395,6 @@ Produce detailed, comprehensive, well-structured section content that:
 """
 
 
-
 FINALIZER_SYSTEM_PROMPT_TEMPLATE = """You are a specialized agent responsible for creating a comprehensive conclusion and selecting the most relevant references for a research report. Your task is to synthesize insights from all section content to create a powerful conclusion, and to identify the most crucial references that support the report's key findings.
 
 ## Input

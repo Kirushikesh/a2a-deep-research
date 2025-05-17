@@ -1,8 +1,10 @@
-from typing import Annotated, List
 import operator
-from typing import TypedDict
-from .struct import Section, Feedback, Query, SearchResults, ResponseFormat
+from typing import Annotated, List, TypedDict
+
 from langgraph.graph.message import add_messages
+
+from .struct import Feedback, Query, ResponseFormat, SearchResults, Section
+
 
 class ResearchState(TypedDict):
     section: Section

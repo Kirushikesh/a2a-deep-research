@@ -1,6 +1,5 @@
 from components.header import header
-from components.page_scaffold import page_scaffold
-from components.page_scaffold import page_frame
+from components.page_scaffold import page_frame, page_scaffold
 from components.task_card import task_card
 from state.state import AppState
 

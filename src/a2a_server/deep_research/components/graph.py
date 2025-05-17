@@ -1,22 +1,22 @@
-from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
-from .state import AgentState, ResearchState
-from .struct import SectionOutput
+from langgraph.graph import END, START, StateGraph
+
 from .nodes import (
-    report_structure_planner_node,
+    final_section_formatter_node,
+    finalizer_node,
     human_feedback_node,
+    output,
+    query_generator_node,
+    queue_next_section_node,
+    reflection_feedback_node,
+    report_structure_planner_node,
+    result_accumulator_node,
     section_formatter_node,
     section_knowledge_node,
-    query_generator_node,
     tavily_search_node,
-    result_accumulator_node,
-    reflection_feedback_node,
-    final_section_formatter_node,
-    queue_next_section_node,
-    finalizer_node,
-    output
 )
-
+from .state import AgentState, ResearchState
+from .struct import SectionOutput
 
 # <<< ----- RESEARCH AGENT ----- >>>
 

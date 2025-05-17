@@ -1,12 +1,11 @@
 import mesop as me
 from state.state import AppState
 from styles.styles import (
-    SIDENAV_MAX_WIDTH,
-    SIDENAV_MIN_WIDTH,
     _FANCY_TEXT_GRADIENT,
     DEFAULT_MENU_STYLE,
+    SIDENAV_MAX_WIDTH,
+    SIDENAV_MIN_WIDTH,
 )
-
 
 page_json = [
     {"display": "Home", "icon": "message", "route": "/"},
@@ -16,10 +15,12 @@ page_json = [
     {"display": "Settings", "icon": "settings", "route": "/settings"},
 ]
 
+
 def on_sidenav_menu_click(e: me.ClickEvent):  # pylint: disable=unused-argument
     """Side navigation menu click handler"""
     state = me.state(AppState)
     state.sidenav_open = not state.sidenav_open
+
 
 def navigate_to(e: me.ClickEvent):
     """navigate to a specific page"""
@@ -31,6 +32,7 @@ def navigate_to(e: me.ClickEvent):
     s.current_page = page["route"]
     me.navigate(s.current_page)
     yield
+
 
 @me.component
 def sidenav(current_page: str):
@@ -82,7 +84,8 @@ def sidenav(current_page: str):
                     "Theme",
                     not app_state.sidenav_open,
                 )
-                #menu_item(10, "settings", "Settings", not app_state.sidenav_open)
+                # menu_item(10, "settings", "Settings", not app_state.sidenav_open)
+
 
 def menu_item(
     key: int,

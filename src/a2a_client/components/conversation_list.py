@@ -1,11 +1,11 @@
+import uuid
+from typing import List
+
 import mesop as me
 import pandas as pd
-from typing import List
-import uuid
-
-from state.state import AppState
-from state.state import StateConversation
 from state.host_agent_service import CreateConversation
+from state.state import AppState, StateConversation
+
 
 @me.component
 def conversation_list(conversations: List[StateConversation]):
@@ -17,8 +17,8 @@ def conversation_list(conversations: List[StateConversation]):
         df_data["Status"].append("Open" if conversation.is_active else "Closed")
         df_data["Messages"].append(len(conversation.message_ids))
     df = pd.DataFrame(
-        pd.DataFrame(df_data),
-        columns=["ID", "Name", "Status", "Messages"])
+        pd.DataFrame(df_data), columns=["ID", "Name", "Status", "Messages"]
+    )
     with me.box(
         style=me.Style(
             display="flex",
@@ -27,15 +27,15 @@ def conversation_list(conversations: List[StateConversation]):
         )
     ):
         me.table(
-          df,
-          on_click=on_click,
-          header=me.TableHeader(sticky=True),
-          columns={
-            "ID": me.TableColumn(sticky=True),
-            "Name": me.TableColumn(sticky=True),
-            "Status": me.TableColumn(sticky=True),
-            "Messages": me.TableColumn(sticky=True),
-          },
+            df,
+            on_click=on_click,
+            header=me.TableHeader(sticky=True),
+            columns={
+                "ID": me.TableColumn(sticky=True),
+                "Name": me.TableColumn(sticky=True),
+                "Status": me.TableColumn(sticky=True),
+                "Messages": me.TableColumn(sticky=True),
+            },
         )
         with me.content_button(
             type="raised",
@@ -56,14 +56,16 @@ async def add_conversation(e: me.ClickEvent):  # pylint: disable=unused-argument
     """add conversation button handler"""
     response = await CreateConversation()
     me.state(AppState).messages = []
-    me.navigate("/conversation", query_params={"conversation_id": response.conversation_id})
+    me.navigate(
+        "/conversation", query_params={"conversation_id": response.conversation_id}
+    )
     yield
 
 
 def on_click(e: me.TableClickEvent):
-  state = me.state(AppState)
-  conversation = state.conversations[e.row_index]
-  state.current_conversation_id = conversation.conversation_id
-  me.query_params.update({"conversation_id": conversation.conversation_id})
-  me.navigate("/conversation", query_params=me.query_params)
-  yield
+    state = me.state(AppState)
+    conversation = state.conversations[e.row_index]
+    state.current_conversation_id = conversation.conversation_id
+    me.query_params.update({"conversation_id": conversation.conversation_id})
+    me.navigate("/conversation", query_params=me.query_params)
+    yield

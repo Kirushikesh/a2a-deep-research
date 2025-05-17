@@ -1,44 +1,46 @@
-from langchain_core.runnables import RunnableConfig
-from langchain_core.prompts import (
-    ChatPromptTemplate, 
-    SystemMessagePromptTemplate, 
-    HumanMessagePromptTemplate, 
-    MessagesPlaceholder
-)
-from langgraph.types import Command, Send
-from typing import Literal, Dict
-from .state import AgentState, ResearchState
-from .configuration import Configuration
-from .prompts import (
-    REPORT_STRUCTURE_PLANNER_SYSTEM_PROMPT_TEMPLATE,
-    SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE,
-    SECTION_KNOWLEDGE_SYSTEM_PROMPT_TEMPLATE,
-    QUERY_GENERATOR_SYSTEM_PROMPT_TEMPLATE,
-    RESULT_ACCUMULATOR_SYSTEM_PROMPT_TEMPLATE,
-    REFLECTION_FEEDBACK_SYSTEM_PROMPT_TEMPLATE,
-    FINAL_SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE,
-    FINALIZER_SYSTEM_PROMPT_TEMPLATE,
-)
-from .struct import (
-    Sections,
-    Queries,
-    SearchResult,
-    SearchResults,
-    Feedback,
-    ConclusionAndReferences,
-    Route,
-    ResponseFormat
-)
-import time
 import os
-from langchain_tavily import TavilySearch
-from langchain_google_genai import ChatGoogleGenerativeAI
-from .configuration import Configuration
+import time
+from typing import Dict, Literal
 
 from dotenv import load_dotenv
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+)
+from langchain_core.runnables import RunnableConfig
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_tavily import TavilySearch
+from langgraph.types import Command, Send
+
+from .configuration import Configuration
+from .prompts import (
+    FINAL_SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE,
+    FINALIZER_SYSTEM_PROMPT_TEMPLATE,
+    QUERY_GENERATOR_SYSTEM_PROMPT_TEMPLATE,
+    REFLECTION_FEEDBACK_SYSTEM_PROMPT_TEMPLATE,
+    REPORT_STRUCTURE_PLANNER_SYSTEM_PROMPT_TEMPLATE,
+    RESULT_ACCUMULATOR_SYSTEM_PROMPT_TEMPLATE,
+    SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE,
+    SECTION_KNOWLEDGE_SYSTEM_PROMPT_TEMPLATE,
+)
+from .state import AgentState, ResearchState
+from .struct import (
+    ConclusionAndReferences,
+    Feedback,
+    Queries,
+    ResponseFormat,
+    Route,
+    SearchResult,
+    SearchResults,
+    Sections,
+)
+
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(model='gemini-2.0-flash-lite')
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite")
+
 
 def report_structure_planner_node(state: AgentState, config: RunnableConfig) -> Dict:
     """
@@ -57,17 +59,24 @@ def report_structure_planner_node(state: AgentState, config: RunnableConfig) -> 
     """
     configurable = Configuration.from_runnable_config(config)
 
-    report_structure_planner_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(REPORT_STRUCTURE_PLANNER_SYSTEM_PROMPT_TEMPLATE),
-        MessagesPlaceholder(variable_name="messages")
-    ])
+    report_structure_planner_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                REPORT_STRUCTURE_PLANNER_SYSTEM_PROMPT_TEMPLATE
+            ),
+            MessagesPlaceholder(variable_name="messages"),
+        ]
+    )
 
     report_structure_planner_llm = report_structure_planner_system_prompt | llm
 
     result = report_structure_planner_llm.invoke(state)
     return {"messages": [result]}
 
-def human_feedback_node(state: AgentState, config: RunnableConfig)->Command[Literal["output", "section_formatter"]]:
+
+def human_feedback_node(
+    state: AgentState, config: RunnableConfig
+) -> Command[Literal["output", "section_formatter"]]:
     """
     Handles human feedback on the generated report structure.
 
@@ -84,23 +93,17 @@ def human_feedback_node(state: AgentState, config: RunnableConfig)->Command[Lite
             - "section_formatter" with the approved report structure
             - "report_structure_planner" with feedback for revision
     """
-    response = (
-        llm
-        .with_structured_output(Route).invoke(
-            state["messages"]
-        )
-    )
+    response = llm.with_structured_output(Route).invoke(state["messages"])
     step = response.step
 
     if step == "input_required":
-        return Command(
-            goto="output"
-        )
+        return Command(goto="output")
     else:
         return Command(
             goto="section_formatter",
         )
-    
+
+
 def output(state: AgentState, config: RunnableConfig):
     """
     Returns the final report content or the last message if no final content is available.
@@ -112,13 +115,23 @@ def output(state: AgentState, config: RunnableConfig):
     Returns:
         Dict: A dictionary containing the 'structured_response' key with the final report content or last message
     """
-    if(state.get('final_report_content',None)):
-        return {"structured_response": ResponseFormat(status='completed',message=state['final_report_content'])}
+    if state.get("final_report_content", None):
+        return {
+            "structured_response": ResponseFormat(
+                status="completed", message=state["final_report_content"]
+            )
+        }
     else:
-        return {"structured_response": ResponseFormat(status='input_required',message=state['messages'][-1].content)}
-    
+        return {
+            "structured_response": ResponseFormat(
+                status="input_required", message=state["messages"][-1].content
+            )
+        }
 
-def section_formatter_node(state: AgentState, config: RunnableConfig) -> Command[Literal["queue_next_section"]]:
+
+def section_formatter_node(
+    state: AgentState, config: RunnableConfig
+) -> Command[Literal["queue_next_section"]]:
     """
     Formats the report structure into discrete sections for processing.
 
@@ -138,29 +151,34 @@ def section_formatter_node(state: AgentState, config: RunnableConfig) -> Command
 
     configurable = Configuration.from_runnable_config(config)
 
-    section_formatter_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE),
-        MessagesPlaceholder(variable_name="messages")
-    ])
-    section_formatter_llm = section_formatter_system_prompt | llm.with_structured_output(Sections)
+    section_formatter_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE
+            ),
+            MessagesPlaceholder(variable_name="messages"),
+        ]
+    )
+    section_formatter_llm = (
+        section_formatter_system_prompt | llm.with_structured_output(Sections)
+    )
 
     result = section_formatter_llm.invoke(state)
 
     os.makedirs("logs", exist_ok=True)
     with open("logs/sections.json", "w", encoding="utf-8") as f:
         f.write(result.model_dump_json())
-    
+
     # Initialize the sections queue and current section index
     return Command(
-        update={
-            "sections": result.sections,
-            "current_section_index": 0
-        },
-        goto="queue_next_section"
+        update={"sections": result.sections, "current_section_index": 0},
+        goto="queue_next_section",
     )
 
 
-def queue_next_section_node(state: AgentState, config: RunnableConfig) -> Command[Literal["research_agent", "finalizer"]]:
+def queue_next_section_node(
+    state: AgentState, config: RunnableConfig
+) -> Command[Literal["research_agent", "finalizer"]]:
     """
     Manages the sequential processing of report sections with rate limiting.
 
@@ -180,22 +198,34 @@ def queue_next_section_node(state: AgentState, config: RunnableConfig) -> Comman
             - "finalizer" when all sections are complete
     """
     configurable = Configuration.from_runnable_config(config)
-    
+
     if state["current_section_index"] < len(state["sections"]):
         current_section = state["sections"][state["current_section_index"]]
-        
+
         if state["current_section_index"] > 0:
-            print(f"Waiting {configurable.section_delay_seconds} seconds before processing next section to avoid rate limits...")
+            print(
+                f"Waiting {configurable.section_delay_seconds} seconds before processing next section to avoid rate limits..."
+            )
             time.sleep(configurable.section_delay_seconds)
-            
-        print(f"Processing section {state['current_section_index'] + 1}/{len(state['sections'])}: {current_section.section_name}")
-        
+
+        print(
+            f"Processing section {state['current_section_index'] + 1}/{len(state['sections'])}: {current_section.section_name}"
+        )
+
         return Command(
             update={"current_section_index": state["current_section_index"] + 1},
-            goto=Send("research_agent", {"section": current_section, "current_section_index": state["current_section_index"]})
+            goto=Send(
+                "research_agent",
+                {
+                    "section": current_section,
+                    "current_section_index": state["current_section_index"],
+                },
+            ),
         )
     else:
-        print(f"All {len(state['sections'])} sections have been processed. Generating final report...")
+        print(
+            f"All {len(state['sections'])} sections have been processed. Generating final report..."
+        )
         return Command(goto="finalizer")
 
 
@@ -204,7 +234,7 @@ def section_knowledge_node(state: ResearchState, config: RunnableConfig):
     Generates initial knowledge and understanding about a section before conducting research.
 
     This node uses an LLM to analyze the section details and generate foundational knowledge
-    that will guide the subsequent research process. It processes the section information 
+    that will guide the subsequent research process. It processes the section information
     through a system prompt to establish context and requirements.
 
     Args:
@@ -217,10 +247,14 @@ def section_knowledge_node(state: ResearchState, config: RunnableConfig):
     """
     configurable = Configuration.from_runnable_config(config)
 
-    section_knowledge_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(SECTION_KNOWLEDGE_SYSTEM_PROMPT_TEMPLATE),
-        HumanMessagePromptTemplate.from_template(template="{section}"),
-    ])
+    section_knowledge_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                SECTION_KNOWLEDGE_SYSTEM_PROMPT_TEMPLATE
+            ),
+            HumanMessagePromptTemplate.from_template(template="{section}"),
+        ]
+    )
     section_knowledge_llm = section_knowledge_system_prompt | llm
 
     result = section_knowledge_llm.invoke(state)
@@ -248,17 +282,25 @@ def query_generator_node(state: ResearchState, config: RunnableConfig):
     """
     configurable = Configuration.from_runnable_config(config)
 
-    query_generator_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(
-            QUERY_GENERATOR_SYSTEM_PROMPT_TEMPLATE.format(max_queries=configurable.max_queries)
-        ),
-        HumanMessagePromptTemplate.from_template(
-            template="Section: {section}\nPrevious Queries: {searched_queries}\nReflection Feedback: {reflection_feedback}"
-        ),
-    ])
-    query_generator_llm = query_generator_system_prompt | llm.with_structured_output(Queries)
+    query_generator_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                QUERY_GENERATOR_SYSTEM_PROMPT_TEMPLATE.format(
+                    max_queries=configurable.max_queries
+                )
+            ),
+            HumanMessagePromptTemplate.from_template(
+                template="Section: {section}\nPrevious Queries: {searched_queries}\nReflection Feedback: {reflection_feedback}"
+            ),
+        ]
+    )
+    query_generator_llm = query_generator_system_prompt | llm.with_structured_output(
+        Queries
+    )
 
-    state["reflection_feedback"] = state.get("reflection_feedback", Feedback(feedback=""))
+    state["reflection_feedback"] = state.get(
+        "reflection_feedback", Feedback(feedback="")
+    )
     state["searched_queries"] = state.get("searched_queries", [])
 
     result = query_generator_llm.invoke(state)
@@ -304,14 +346,21 @@ def tavily_search_node(state: ResearchState, config: RunnableConfig):
     search_results = []
     for query in queries:
         search_content = []
-        response = tavily_client.invoke({"query": query.query, "max_results":configurable.search_depth})
+        response = tavily_client.invoke(
+            {"query": query.query, "max_results": configurable.search_depth}
+        )
         for result in response["results"]:
-            if result['raw_content'] and result['url'] and result['title']:
-                search_content.append(SearchResult(url=result['url'], title=result['title'], raw_content=result['raw_content']))
+            if result["raw_content"] and result["url"] and result["title"]:
+                search_content.append(
+                    SearchResult(
+                        url=result["url"],
+                        title=result["title"],
+                        raw_content=result["raw_content"],
+                    )
+                )
         search_results.append(SearchResults(query=query, results=search_content))
 
     return {"search_results": search_results}
-
 
 
 def result_accumulator_node(state: ResearchState, config: RunnableConfig):
@@ -319,7 +368,7 @@ def result_accumulator_node(state: ResearchState, config: RunnableConfig):
     Accumulates and synthesizes search results into coherent content.
 
     This node takes the search results from the previous node and uses an LLM to process
-    and combine them into a unified, coherent piece of content. The LLM analyzes the 
+    and combine them into a unified, coherent piece of content. The LLM analyzes the
     search results and extracts relevant information to build knowledge about the section topic.
 
     Args:
@@ -334,10 +383,14 @@ def result_accumulator_node(state: ResearchState, config: RunnableConfig):
     """
     configurable = Configuration.from_runnable_config(config)
 
-    result_accumulator_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(RESULT_ACCUMULATOR_SYSTEM_PROMPT_TEMPLATE),
-        HumanMessagePromptTemplate.from_template(template="{search_results}"),
-    ])
+    result_accumulator_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                RESULT_ACCUMULATOR_SYSTEM_PROMPT_TEMPLATE
+            ),
+            HumanMessagePromptTemplate.from_template(template="{search_results}"),
+        ]
+    )
     result_accumulator_llm = result_accumulator_system_prompt | llm
 
     result = result_accumulator_llm.invoke(state)
@@ -346,8 +399,7 @@ def result_accumulator_node(state: ResearchState, config: RunnableConfig):
 
 
 def reflection_feedback_node(
-        state: ResearchState, 
-        config: RunnableConfig
+    state: ResearchState, config: RunnableConfig
 ) -> Command[Literal["final_section_formatter", "query_generator"]]:
     """
     Evaluates the quality and completeness of accumulated research content and determines next steps.
@@ -368,28 +420,46 @@ def reflection_feedback_node(
             - query_generator: If content needs improvement and more iterations remain
             The Command includes updated reflection feedback and count in its state updates.
     """
-    
+
     configurable = Configuration.from_runnable_config(config)
 
-    reflection_feedback_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(REFLECTION_FEEDBACK_SYSTEM_PROMPT_TEMPLATE),
-        HumanMessagePromptTemplate.from_template(template="Section: {section}\nAccumulated Content: {accumulated_content}"),
-    ])
-    reflection_feedback_llm = reflection_feedback_system_prompt | llm.with_structured_output(Feedback)
+    reflection_feedback_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                REFLECTION_FEEDBACK_SYSTEM_PROMPT_TEMPLATE
+            ),
+            HumanMessagePromptTemplate.from_template(
+                template="Section: {section}\nAccumulated Content: {accumulated_content}"
+            ),
+        ]
+    )
+    reflection_feedback_llm = (
+        reflection_feedback_system_prompt | llm.with_structured_output(Feedback)
+    )
 
     reflection_count = state["reflection_count"] if "reflection_count" in state else 1
     result = reflection_feedback_llm.invoke(state)
     feedback = result.feedback
 
-    if (feedback == True) or (str(feedback).lower() == "true") or (reflection_count < configurable.num_reflections):
+    if (
+        (feedback == True)
+        or (str(feedback).lower() == "true")
+        or (reflection_count < configurable.num_reflections)
+    ):
         return Command(
-            update={"reflection_feedback": feedback, "reflection_count": reflection_count},
-            goto="final_section_formatter"
+            update={
+                "reflection_feedback": feedback,
+                "reflection_count": reflection_count,
+            },
+            goto="final_section_formatter",
         )
     else:
         return Command(
-            update={"reflection_feedback": feedback, "reflection_count": reflection_count + 1},
-            goto="query_generator"
+            update={
+                "reflection_feedback": feedback,
+                "reflection_count": reflection_count + 1,
+            },
+            goto="query_generator",
         )
 
 
@@ -412,17 +482,27 @@ def final_section_formatter_node(state: ResearchState, config: RunnableConfig):
 
     configurable = Configuration.from_runnable_config(config)
 
-    final_section_formatter_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(FINAL_SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE),
-        HumanMessagePromptTemplate.from_template(template="Internal Knowledge: {knowledge}\nSearch Result content: {accumulated_content}"),
-    ])
+    final_section_formatter_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(
+                FINAL_SECTION_FORMATTER_SYSTEM_PROMPT_TEMPLATE
+            ),
+            HumanMessagePromptTemplate.from_template(
+                template="Internal Knowledge: {knowledge}\nSearch Result content: {accumulated_content}"
+            ),
+        ]
+    )
     final_section_formatter_llm = final_section_formatter_system_prompt | llm
 
     result = final_section_formatter_llm.invoke(state)
 
     os.makedirs("logs/section_content", exist_ok=True)
 
-    with open(f"logs/section_content/{state['current_section_index']+1}. {state['section'].section_name}.md", "a", encoding="utf-8") as f:
+    with open(
+        f"logs/section_content/{state['current_section_index']+1}. {state['section'].section_name}.md",
+        "a",
+        encoding="utf-8",
+    ) as f:
         f.write(f"{result.content}")
 
     return {"final_section_content": [result.content]}
@@ -436,7 +516,7 @@ def finalizer_node(state: AgentState, config: RunnableConfig):
     1. Uses an LLM to generate a conclusion and curated list of references
     2. Combines all section content into a single markdown document
     3. Saves the final report to a file
-    
+
     Args:
         state (AgentState): The current agent state containing all section content and search results
         config (RunnableConfig): Configuration object containing LLM settings
@@ -448,22 +528,36 @@ def finalizer_node(state: AgentState, config: RunnableConfig):
     configurable = Configuration.from_runnable_config(config)
 
     extracted_search_results = []
-    for search_results in state['search_results']:
+    for search_results in state["search_results"]:
         for search_result in search_results.results:
-            extracted_search_results.append({"url": search_result.url, "title": search_result.title})
+            extracted_search_results.append(
+                {"url": search_result.url, "title": search_result.title}
+            )
 
-    finalizer_system_prompt = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(FINALIZER_SYSTEM_PROMPT_TEMPLATE),
-        HumanMessagePromptTemplate.from_template(template="Section Contents: {final_section_content}\n\nSearches: {extracted_search_results}"),
-    ])
-    finalizer_llm = finalizer_system_prompt | llm.with_structured_output(ConclusionAndReferences)
+    finalizer_system_prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(FINALIZER_SYSTEM_PROMPT_TEMPLATE),
+            HumanMessagePromptTemplate.from_template(
+                template="Section Contents: {final_section_content}\n\nSearches: {extracted_search_results}"
+            ),
+        ]
+    )
+    finalizer_llm = finalizer_system_prompt | llm.with_structured_output(
+        ConclusionAndReferences
+    )
 
-    result = finalizer_llm.invoke({**state, "extracted_search_results": extracted_search_results})
+    result = finalizer_llm.invoke(
+        {**state, "extracted_search_results": extracted_search_results}
+    )
 
-    final_report = "\n\n".join([section_content for section_content in state["final_section_content"]])
+    final_report = "\n\n".join(
+        [section_content for section_content in state["final_section_content"]]
+    )
     final_report += "\n\n" + result.conclusion
-    final_report += "\n\n# References\n\n" + "\n".join(["- "+reference for reference in result.references])
-    
+    final_report += "\n\n# References\n\n" + "\n".join(
+        ["- " + reference for reference in result.references]
+    )
+
     os.makedirs("logs/reports", exist_ok=True)
     with open(f"logs/reports/response.md", "w", encoding="utf-8") as f:
         f.write(final_report)

@@ -1,9 +1,10 @@
-from mcp.server.fastmcp import FastMCP
 import httpx
 from dotenv import load_dotenv
+from mcp.server.fastmcp import FastMCP
 
 load_dotenv()
 mcp = FastMCP("Currency Exchange Rates")
+
 
 @mcp.tool()
 def get_exchange_rate(
@@ -36,6 +37,7 @@ def get_exchange_rate(
         return {"error": f"API request failed: {e}"}
     except ValueError:
         return {"error": "Invalid JSON response from API."}
+
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

@@ -1,5 +1,6 @@
 import mesop as me
 
+
 @me.content_component
 def dialog(is_open: bool):
     with me.box(
@@ -36,11 +37,10 @@ def dialog(is_open: bool):
             ):
                 me.slot()
 
+
 @me.content_component
 def dialog_actions():
     with me.box(
-        style=me.Style(
-            display="flex", justify_content="end", margin=me.Margin(top=20)
-        )
+        style=me.Style(display="flex", justify_content="end", margin=me.Margin(top=20))
     ):
         me.slot()

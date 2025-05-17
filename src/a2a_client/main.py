@@ -1,46 +1,45 @@
-
 """A UI solution and host service to interact with the agent framework.
 run:
   uv main.py
 """
+
 import asyncio
 import os
 import threading
 
 import mesop as me
-
-from state.state import AppState
-from components.page_scaffold import page_scaffold
 from components.api_key_dialog import api_key_dialog
-from pages.home import home_page_content
+from components.page_scaffold import page_scaffold
+from dotenv import load_dotenv
+from fastapi import APIRouter, FastAPI
+from fastapi.middleware.wsgi import WSGIMiddleware
 from pages.agent_list import agent_list_page
 from pages.conversation import conversation_page
 from pages.event_list import event_list_page
+from pages.home import home_page_content
 from pages.settings import settings_page_content
 from pages.task_list import task_list_page
-from state import host_agent_service
 from service.server.server import ConversationServer
-
-from fastapi import FastAPI, APIRouter
-from fastapi.middleware.wsgi import WSGIMiddleware
-from dotenv import load_dotenv
+from state import host_agent_service
+from state.state import AppState
 
 load_dotenv()
+
 
 def on_load(e: me.LoadEvent):  # pylint: disable=unused-argument
     """On load event"""
     state = me.state(AppState)
     me.set_theme_mode(state.theme_mode)
     if "conversation_id" in me.query_params:
-      state.current_conversation_id = me.query_params["conversation_id"]
+        state.current_conversation_id = me.query_params["conversation_id"]
     else:
-      state.current_conversation_id = ""
-    
+        state.current_conversation_id = ""
+
     # check if the API key is set in the environment
     # and if the user is using Vertex AI
     uses_vertex_ai = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").upper() == "TRUE"
     api_key = os.getenv("GOOGLE_API_KEY", "")
-    
+
     if uses_vertex_ai:
         state.uses_vertex_ai = True
     elif api_key:
@@ -49,12 +48,13 @@ def on_load(e: me.LoadEvent):  # pylint: disable=unused-argument
         # Show the API key dialog if both are not set
         state.api_key_dialog_open = True
 
+
 # Policy to allow the lit custom element to load
-security_policy=me.SecurityPolicy(
+security_policy = me.SecurityPolicy(
     allowed_script_srcs=[
-      'https://cdn.jsdelivr.net',
+        "https://cdn.jsdelivr.net",
     ]
-  )
+)
 
 
 @me.page(
@@ -95,6 +95,7 @@ def chat_page():
     api_key_dialog()
     conversation_page(me.state(AppState))
 
+
 @me.page(
     path="/event_list",
     title="Event List",
@@ -130,6 +131,7 @@ def task_page():
     api_key_dialog()
     task_list_page(me.state(AppState))
 
+
 # Setup the server global objects
 app = FastAPI()
 router = APIRouter()
@@ -143,9 +145,10 @@ app.mount(
     ),
 )
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
 
     import uvicorn
+
     # Setup the connection details, these should be set in the environment
     host = os.environ.get("A2A_UI_HOST", "0.0.0.0")
     port = int(os.environ.get("A2A_UI_PORT", "12000"))

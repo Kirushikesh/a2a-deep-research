@@ -1,7 +1,9 @@
-from dataclasses import dataclass, fields
-from langchain_core.runnables import RunnableConfig
 import os
+from dataclasses import dataclass, fields
 from typing import Any
+
+from langchain_core.runnables import RunnableConfig
+
 
 @dataclass(kw_only=True)
 class Configuration:
@@ -10,13 +12,10 @@ class Configuration:
     search_depth: int = 2
     num_reflections: int = 2
     section_delay_seconds: int = 3
-    
+
     @classmethod
-    def from_runnable_config(
-        cls,
-        config: RunnableConfig
-    ) -> "Configuration":
-        
+    def from_runnable_config(cls, config: RunnableConfig) -> "Configuration":
+
         configurable = (
             config["configurable"] if config and "configurable" in config else {}
         )
