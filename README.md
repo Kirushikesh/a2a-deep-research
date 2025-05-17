@@ -63,6 +63,44 @@ The system is built using a client-server architecture with MCP protocol handlin
 
 The deep research agent leverages modern AI models for sophisticated analysis, while the currency converter demonstrates practical MCP tool integration in a real-world application.
 
+---
+
+## Demo
+
+Below are some screenshots demonstrating the UI and workflow of the project:
+
+### Welcome Page
+![Welcome Page](images/welcome_page.png)
+
+### Adding a New Agent
+![Adding New Agent](images/adding_new_agent.png)
+
+### Agents Available
+![Agents Available](images/agents_available.png)
+
+### Currency Conversion Example(MCP) in Action
+![MCP Conversation](images/mcp_conversation.png)
+
+[🔗 View LangSmith Agent Trace for Currency Conversion Example](https://smith.langchain.com/public/2af02d04-2755-480e-ad8d-06e513e5682c/rhttps://smith.langchain.com/public/eaa102a9-5479-4779-84de-640df8ca0e31/r)
+
+### Conversations List
+![Conversations Available](images/conversations_available.png)
+
+### Greetings Example
+![Greetings](images/greetings.png)
+
+### Research Question Submission
+![Research Question](images/research_question.png)
+
+### Research Clarification Step
+![Research Clarification](images/research_clarification.png)
+
+### Final Report Generated
+![Final Report](images/final_report.png)
+
+[🔗 View LangSmith Agent Trace for Research Report Generation](https://smith.langchain.com/public/24380b0a-d779-41dc-8c88-b6f61da41b39/r)
+---
+
 ## Key Features
 
 - Implementation of two distinct LangGraph-based agents
@@ -88,6 +126,19 @@ The deep research agent leverages modern AI models for sophisticated analysis, w
 ```bash
 poetry install
 ```
+3. After installing dependencies, create a `.env` file and fill in your API keys.
+
+```env
+LANGSMITH_API_KEY=lsv2_...  # Optional, for LangSmith tracing
+GOOGLE_API_KEY=...
+TAVILY_API_KEY=...
+```
+
+- `GOOGLE_API_KEY`: Required for Gemini LLM inference (Gemini 2.0 Flash Lite).
+- `TAVILY_API_KEY`: Required for Tavily search tool.
+- `LANGSMITH_API_KEY`: (Optional) For enabling LangSmith/LangGraph tracing.
+
+> **Note:** LangSmith tracing is optional but recommended for debugging and visualizing agent traces.
 
 ### Running the Project
 
@@ -134,6 +185,9 @@ Agents communicate using the MCP protocol, which handles:
 
 ### Deep Research Implementation
 
+- **LLM Model:** All LLM inference in this project uses the `gemini-2.0-flash-lite` model from Google.
+- **Token Usage Warning:** The Deep Research agent may make multiple LLM calls per query (for multi-step reasoning and reflection). Please be aware of potential token usage and associated costs.
+
 The deep research agent uses a pipeline approach:
 1. Query analysis and planning
 2. Web data collection
@@ -177,6 +231,7 @@ This project is licensed under the terms of the LICENSE file.
 - Google's A2A Framework
 - LangGraph
 - MCP Protocol Team
+- [psykick-21/deep-research](https://github.com/psykick-21/deep-research) for inspiration and reference for the Deep Research agent implementation
 
 ## References
 
