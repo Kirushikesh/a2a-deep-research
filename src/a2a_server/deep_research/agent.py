@@ -6,8 +6,8 @@ import uuid
 from langchain_core.messages import AIMessage, ToolMessage
 
 from langgraph.checkpoint.memory import MemorySaver
-from deep_research.graph import builder
-from deep_research.struct import ResponseFormat
+from components.graph import builder
+from components.struct import ResponseFormat
 
 memory = MemorySaver()
 
