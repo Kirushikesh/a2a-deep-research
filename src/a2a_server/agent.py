@@ -22,9 +22,9 @@ class DeepResearchAgent:
         config = {
             "configurable": {
                 "thread_id": sessionId,
-                "max_queries": 3,
-                "search_depth": 3,
-                "num_reflections": 3,
+                "max_queries": 2,
+                "search_depth": 2,
+                "num_reflections": 2,
                 "temperature": 0.7
             }
         }
@@ -37,9 +37,9 @@ class DeepResearchAgent:
         config = {
             "configurable": {
                 "thread_id": sessionId,
-                "max_queries": 3,
-                "search_depth": 3,
-                "num_reflections": 3,
+                "max_queries": 2,
+                "search_depth": 2,
+                "num_reflections": 2,
                 "temperature": 0.7
             }
         }

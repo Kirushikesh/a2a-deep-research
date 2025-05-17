@@ -42,7 +42,7 @@ class CurrencyAgent:
     )
 
     def __init__(self):
-        self.model = ChatGoogleGenerativeAI(model='gemini-2.0-flash')
+        self.model = ChatGoogleGenerativeAI(model='gemini-2.0-flash-lite')
 
     async def invoke(self, query, sessionId) -> str:
         async with MultiServerMCPClient(
