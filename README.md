@@ -81,7 +81,7 @@ Below are some screenshots demonstrating the UI and workflow of the project:
 ### Currency Conversion Example(MCP) in Action
 ![MCP Conversation](images/mcp_conversation.png)
 
-[🔗 View LangSmith Agent Trace for Currency Conversion Example](https://smith.langchain.com/public/2af02d04-2755-480e-ad8d-06e513e5682c/rhttps://smith.langchain.com/public/eaa102a9-5479-4779-84de-640df8ca0e31/r)
+[🔗 View LangSmith Agent Trace for Currency Conversion Example](https://smith.langchain.com/public/eb8a00ad-731d-4ce5-a0a1-0af71e863154/r))
 
 ### Conversations List
 ![Conversations Available](images/conversations_available.png)
